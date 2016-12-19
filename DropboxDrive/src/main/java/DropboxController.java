@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class DropboxController {
+public class DropboxController implements FileManager {
     public static final String APP_KEY = "9q7jfw7270v9x38";
     public static final String APP_SECRET = "dt2w6bue9hqt37q";
 
@@ -28,6 +28,12 @@ public class DropboxController {
         this(APP_KEY, APP_SECRET);
     }
 
+    /**
+     * Get access token for current user account.
+     * @return access token.
+     * @throws IOException System.in exception.
+     * @throws DbxException DbxWebAuthNoRedirect finish exception.
+     */
     public String getAccess() throws IOException, DbxException {
         DbxWebAuthNoRedirect webAuth = new DbxWebAuthNoRedirect(config, appInfo);
 
@@ -43,10 +49,21 @@ public class DropboxController {
         return accessToken;
     }
 
+    /**
+     * Sets session token.
+     * @param accessToken the unique session string, is not expired.
+     */
     public void setToken(String accessToken) {
         client = new DbxClient(config, accessToken);
     }
 
+    /**
+     * Uploads file on Dropbox server.
+     * @param inputFile current file for upload.
+     * @param filePath file location on Dropbox server.
+     * @throws IOException when file input error.
+     * @throws DbxException client's upload exception.
+     */
     public void upload(File inputFile, String filePath)
             throws IOException, DbxException {
         if (client != null) {
@@ -60,6 +77,13 @@ public class DropboxController {
         }
     }
 
+    /**
+     * Downloads file from Dropbox server.
+     * @param outputFile file which will download.
+     * @param filePath file location on server.
+     * @throws IOException when file output error.
+     * @throws DbxException client's getFile exception.
+     */
     public void download(File outputFile, String filePath)
             throws IOException, DbxException {
         if (client != null) {
@@ -73,9 +97,15 @@ public class DropboxController {
         }
     }
 
-    public Map<String, DbxEntry.File> getFileList(String path)
+    /**
+     * Get a list of file on current path.
+     * @param path server folder location.
+     * @return the list {file name: file entry}
+     * @throws DbxException client's getMetadataWithChildren exception.
+     */
+    public Map<String, Object> getFileList(String path)
             throws DbxException {
-        Map<String, DbxEntry.File> fileList = new HashMap<String, DbxEntry.File>();
+        Map<String, Object> fileList = new HashMap<String, Object>();
         if (client != null) {
             DbxEntry.WithChildren list = client.getMetadataWithChildren(path);
             for (DbxEntry child : list.children) {
@@ -87,18 +117,43 @@ public class DropboxController {
         return fileList;
     }
 
+    /**
+     * Removes file from server.
+     * @param path the file location.
+     * @throws DbxException client's delete exception.
+     */
     public void remove(String path) throws DbxException {
         client.delete(path);
     }
 
+    /**
+     * Moves file from one location to another.
+     * @param fromPath path of file.
+     * @param toPath path where file will be moved.
+     * @return the entry with new file.
+     * @throws DbxException when client's move exception.
+     */
     public DbxEntry move(String fromPath, String toPath) throws DbxException {
         return client.move(fromPath, toPath);
     }
 
+    /**
+     * Copies file from one location to another
+     * @param fromPath path of file.
+     * @param toPath path where file will be copied.
+     * @return the entry with new file.
+     * @throws DbxException when client's copy exception.
+     */
     public DbxEntry copy(String fromPath, String toPath) throws DbxException {
         return client.copy(fromPath, toPath);
     }
 
+    /**
+     * Creates a folder on server.
+     * @param path location of new folder.
+     * @return the entry with new folder.
+     * @throws DbxException when client's createFolder exception.
+     */
     public DbxEntry.Folder createFolder(String path) throws DbxException {
         return client.createFolder(path);
     }
